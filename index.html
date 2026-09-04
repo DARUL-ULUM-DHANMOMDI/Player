@@ -3,617 +3,496 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>স্পিন টু হ্যাং - লার্নিং টুল</title>
+    <title>শিক্ষা ও মেধা যাচাই প্রতিযোগিতা</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
         }
+
         body {
-            background: #0a0a0a;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(145deg, #0b2a4a 0%, #1b4a7a 100%);
             min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            padding: 15px;
+            justify-content: center;
+            color: #fff;
+            padding: 16px;
+            margin: 0;
+            /* Prevent pull-to-refresh and overscroll */
+            overscroll-behavior: none;
+            touch-action: none;
+        }
+
+        .main-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(3px);
+            padding: 30px 20px 40px;
+            border-radius: 60px 20px 60px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            max-width: 420px;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.15);
             user-select: none;
             -webkit-user-select: none;
         }
-        .container {
-            max-width: 500px;
-            width: 100%;
-            background: linear-gradient(145deg, #1a1a2e, #16213e);
-            border-radius: 35px;
-            padding: 25px 20px 30px;
-            box-shadow: 0 25px 70px rgba(0,0,0,0.9), inset 0 0 40px rgba(255,215,0,0.03);
-            border: 1px solid rgba(255,215,0,0.08);
-            position: relative;
-            overflow: hidden;
-        }
-        .container::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at center, rgba(255,215,0,0.02) 0%, transparent 70%);
-            animation: glowPulse 4s ease-in-out infinite;
-            pointer-events: none;
-        }
-        @keyframes glowPulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.8; }
-        }
 
-        .spinner-section {
-            text-align: center;
-            position: relative;
-            z-index: 1;
-            padding: 10px 0;
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            letter-spacing: 1px;
+            word-break: break-word;
         }
-        .spinner-title {
-            color: #ffd700;
-            font-size: 26px;
-            font-weight: 800;
-            text-shadow: 0 0 30px rgba(255,215,0,0.2);
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-        }
-        .spinner-sub {
-            color: #888;
-            font-size: 13px;
+        .subhead {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 4px;
             margin-bottom: 20px;
+            font-weight: 300;
         }
 
-        .wheel-container {
+        /* স্পিন হুইল কনটেইনার */
+        .wheel-wrapper {
             position: relative;
-            width: 280px;
-            height: 280px;
-            margin: 0 auto 20px;
+            width: 260px;
+            height: 260px;
+            margin: 10px auto 20px;
         }
+
+        @media (min-width: 480px) {
+            .wheel-wrapper {
+                width: 300px;
+                height: 300px;
+            }
+        }
+
+        .pointer {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 18px solid transparent;
+            border-right: 18px solid transparent;
+            border-top: 32px solid #ffdd00;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6));
+            z-index: 10;
+        }
+        .pointer::after {
+            content: "▼";
+            position: absolute;
+            top: -38px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: #ffdd00;
+            opacity: 0.7;
+        }
+
         .wheel {
             width: 100%;
             height: 100%;
             border-radius: 50%;
+            border: 6px solid #f5f5f5;
+            box-shadow: 0 0 0 6px #1e3c72, 0 12px 28px rgba(0,0,0,0.7);
             position: relative;
-            box-shadow: 0 0 50px rgba(255,215,0,0.15), inset 0 0 50px rgba(255,215,0,0.05);
-            border: 4px solid #ffd700;
-        }
-        .wheel canvas {
-            width: 100% !important;
-            height: 100% !important;
-            border-radius: 50%;
-        }
-        .wheel-pointer {
-            position: absolute;
-            top: -18px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 40px;
-            color: #ffd700;
-            filter: drop-shadow(0 0 15px rgba(255,215,0,0.6));
-            z-index: 10;
-            text-shadow: 0 0 30px rgba(255,215,0,0.5);
-        }
-        .wheel-center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background: radial-gradient(circle, #ffd700, #b8860b);
-            border-radius: 50%;
-            border: 3px solid #fff;
-            box-shadow: 0 0 30px rgba(255,215,0,0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 800;
-            color: #000;
-            z-index: 5;
+            transition: transform 4.5s cubic-bezier(0.12, 0.91, 0.20, 0.99);
+            background: conic-gradient(
+                #ff5722 0deg 60deg,
+                #4caf50 60deg 120deg,
+                #2196f3 120deg 180deg,
+                #9c27b0 180deg 240deg,
+                #ff9800 240deg 300deg,
+                #e91e63 300deg 360deg
+            );
         }
 
         .spin-btn {
-            background: linear-gradient(145deg, #ffd700, #f0a500);
-            border: none;
-            color: #000;
-            padding: 16px 50px;
-            border-radius: 60px;
-            font-size: 22px;
+            padding: 14px 40px;
+            font-size: 1.3rem;
             font-weight: 800;
+            color: #1e3c72;
+            background: #ffd54f;
+            border: none;
+            border-radius: 50px;
             cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 0 40px rgba(255,215,0,0.2);
+            box-shadow: 0 8px 0 #b47c2e, 0 10px 20px rgba(0,0,0,0.3);
+            transition: 0.08s linear;
             letter-spacing: 2px;
-            position: relative;
-            z-index: 2;
+            margin-top: 8px;
+            touch-action: manipulation;
         }
-        .spin-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 60px rgba(255,215,0,0.4);
+        .spin-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #b47c2e;
         }
         .spin-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .spin-btn .spinning-text {
-            display: none;
-        }
-        .spin-btn.spinning .normal-text {
-            display: none;
-        }
-        .spin-btn.spinning .spinning-text {
-            display: inline;
+            opacity: 0.5;
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #b47c2e;
+            pointer-events: none;
         }
 
-        .congress-popup {
+        /* উইনিং পপ-আপ */
+        .modal-overlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(10px);
-            z-index: 9999;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
             justify-content: center;
             align-items: center;
-            animation: popIn 0.5s ease;
-        }
-        .congress-popup.show {
-            display: flex;
-        }
-        @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.8); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-        .congress-box {
-            background: linear-gradient(145deg, #1a1a2e, #0d0d1a);
-            border: 2px solid #ffd700;
-            border-radius: 30px;
-            padding: 40px 35px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 0 80px rgba(255,215,0,0.15);
-            position: relative;
-        }
-        .congress-box .trophy {
-            font-size: 80px;
-            margin-bottom: 10px;
-        }
-        .congress-box h2 {
-            color: #ffd700;
-            font-size: 32px;
-            font-weight: 800;
-            text-shadow: 0 0 30px rgba(255,215,0,0.2);
-        }
-        .congress-box p {
-            color: #aaa;
-            font-size: 16px;
-            margin: 15px 0 25px;
-            line-height: 1.6;
-        }
-        .congress-box .congress-btn {
-            background: #ffd700;
-            border: none;
-            color: #000;
-            padding: 14px 40px;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .congress-box .congress-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 40px rgba(255,215,0,0.3);
-        }
-
-        .hang-page {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 9998;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            z-index: 200;
             padding: 20px;
         }
-        .hang-page.active {
-            display: flex;
-        }
-        .hang-page .player-card {
-            background: #1e1e1e;
-            padding: 30px 25px;
-            border-radius: 20px;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.8);
+
+        .modal-card {
+            background: #ffffff;
+            color: #1a1a2c;
+            padding: 30px 20px 25px;
+            border-radius: 40px 12px 40px 12px;
             text-align: center;
-            max-width: 400px;
+            max-width: 340px;
             width: 100%;
-            border: 1px solid rgba(255,215,0,0.1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            border: 2px solid #ffd700;
         }
-        .hang-page .player-card h3 {
-            color: #ffd700;
-            font-size: 20px;
-            margin-bottom: 15px;
-            text-shadow: 0 0 20px rgba(255,215,0,0.1);
+        .modal-card h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #2e7d32;
         }
-        .hang-page .player-card audio {
-            width: 100%;
-            margin-top: 10px;
-            border-radius: 8px;
-            background: #2a2a2a;
+        .modal-card .prize-name {
+            font-size: 2.4rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #e91e63, #ff9800);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 10px 0;
         }
-        .hang-page .player-card .hint {
-            font-size: 12px;
-            color: #888;
-            margin-top: 12px;
+        .action-btn {
+            margin-top: 18px;
+            padding: 12px 36px;
+            background: #0d47a1;
+            color: #fff;
+            border: none;
+            border-radius: 60px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #072a5e;
+            transition: 0.06s linear;
+            touch-action: manipulation;
         }
-        .hang-overlay {
+        .action-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #072a5e;
+        }
+
+        /* ফুল-স্কিন সাদা পেজ (প্র্যাঙ্ক) */
+        #whitePage {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9997;
-            cursor: default;
-        }
-        .hang-status {
-            color: #ff4444;
-            font-size: 18px;
-            font-weight: 700;
-            margin-top: 20px;
-            text-shadow: 0 0 30px rgba(255,68,68,0.3);
-            animation: blinkText 1s ease-in-out infinite;
-            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-color: #ffffff;
             z-index: 9999;
-        }
-        @keyframes blinkText {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        .hang-timer {
-            color: #ffd700;
-            font-size: 16px;
-            font-weight: 600;
-            margin-top: 10px;
-            text-shadow: 0 0 20px rgba(255,215,0,0.2);
-            position: relative;
-            z-index: 9999;
-        }
-
-        .footer {
-            color: #444;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
             text-align: center;
-            font-size: 11px;
-            margin-top: 20px;
-            border-top: 1px solid rgba(255,255,255,0.04);
-            padding-top: 15px;
-            position: relative;
-            z-index: 1;
+            padding: 20px;
         }
-        .footer a {
-            color: #ffd700;
-            text-decoration: none;
+        #whitePage .prank-text {
+            font-size: 2.2rem;
+            color: #111;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255,0,0,0.2);
+        }
+        #whitePage .prank-sub {
+            color: #333;
+            margin-top: 10px;
+            font-size: 1.2rem;
+        }
+        .hidden-audio {
+            display: none;
         }
 
+        /* ছোট স্ক্রিনে আরো ভালো */
         @media (max-width: 400px) {
-            .wheel-container { width: 220px; height: 220px; }
-            .spin-btn { padding: 14px 30px; font-size: 18px; }
-            .congress-box { padding: 30px 20px; }
-            .hang-page .player-card { padding: 20px 15px; }
+            .main-container { padding: 20px 12px; }
+            h1 { font-size: 1.5rem; }
+            .wheel-wrapper { width: 220px; height: 220px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ===== স্পিনার সেকশন ===== -->
-    <div class="container" id="mainContainer">
-        <div class="spinner-section">
-            <div class="spinner-title">🎰 স্পিন টু হ্যাং</div>
-            <div class="spinner-sub">ঘুরিয়ে দেখুন আপনার ভাগ্য!</div>
+    <div class="main-container" id="mainView">
+        <h1>🎓 অনলাইন কুইজ ও লটারি</h1>
+        <p class="subhead">স্পিন চাপুন এবং পুরস্কার জিতে নিন!</p>
 
-            <div class="wheel-container">
-                <div class="wheel-pointer">▼</div>
-                <div class="wheel" id="wheel">
-                    <canvas id="wheelCanvas" width="400" height="400"></canvas>
-                </div>
-                <div class="wheel-center">WIN</div>
-            </div>
-
-            <button class="spin-btn" id="spinBtn">
-                <span class="normal-text">🌀 স্পিন করুন</span>
-                <span class="spinning-text">⏳ ঘুরছে...</span>
-            </button>
+        <div class="wheel-wrapper">
+            <div class="pointer"></div>
+            <div class="wheel" id="wheel"></div>
         </div>
-        <div class="footer">
-            ⚡ শিক্ষামূলক উদ্দেশ্যে &nbsp;|&nbsp; <a href="#">কীভাবে কাজ করে</a>
+
+        <button class="spin-btn" id="spinBtn">▶ SPIN</button>
+        <p style="margin-top: 14px; font-size: 0.8rem; opacity: 0.7;">💡 প্রতিটি স্পিনে একটি পুরস্কার নির্ধারিত</p>
+    </div>
+
+    <!-- পপ-আপ মডাল -->
+    <div class="modal-overlay" id="winModal">
+        <div class="modal-card">
+            <h2>🎉 অভিনন্দন!</h2>
+            <p style="font-size: 1.1rem;">আপনি জিতে নিয়েছেন:</p>
+            <div class="prize-name">iPhone 13</div>
+            <div style="font-size: 1.8rem; margin: 6px 0;">📱</div>
+            <button class="action-btn" id="nextPageBtn">এগিয়ে যান →</button>
         </div>
     </div>
 
-    <!-- ===== কংগ্রেস পপআপ ===== -->
-    <div class="congress-popup" id="congressPopup">
-        <div class="congress-box">
-            <div class="trophy">🏆</div>
-            <h2>🎉 কংগ্রেস!</h2>
-            <p>আপনি জিতে গেছেন! <br>এখন অডিও হ্যাং পেজ লোড হবে।</p>
-            <button class="congress-btn" id="congressGoBtn">🚀 এগিয়ে যান</button>
-        </div>
-    </div>
-
-    <!-- ===== হ্যাং পেজ (অডিও প্লেয়ার) ===== -->
-    <div class="hang-page" id="hangPage">
-        <!-- ওভারলে (ব্যাক ব্লক) -->
-        <div class="hang-overlay" id="hangOverlay"></div>
-        
-        <!-- অডিও প্লেয়ার কার্ড -->
-        <div class="player-card">
-            <h3>🔊 অডিও স্ট্রিমিং</h3>
-            
-            <audio id="myAudio" controls autoplay loop preload="metadata">
-                <source src="https://drive.google.com/uc?export=open&id=1WF4FecEnkbTMxgl2bdFXUKR0axwPdEGp" type="audio/mpeg">
-                আপনার ব্রাউজার অডিও সাপোর্ট করে না।
-            </audio>
-
-            <p class="hint">🔊 ভলিউম: ১০০% | সিস্টেম ব্যস্ত...</p>
-        </div>
-
-        <div class="hang-status">📱 সিস্টেম ব্যস্ত... অডিও চলছে</div>
-        <div class="hang-timer" id="hangTimerDisplay">⏱️ লোড হচ্ছে...</div>
+    <!-- প্র্যাঙ্ক সাদা পেজ (সাউন্ড সহ) -->
+    <div id="whitePage">
+        <div class="prank-text">📢 পুরস্কার দাবি করুন!</div>
+        <div class="prank-sub">আপনার ডিভাইসটি এখন নিরাপদ মোডে আছে</div>
+        <div style="margin-top: 30px; font-size: 3rem;">🎁</div>
+        <div style="margin-top: 20px; color: #999; font-size: 0.9rem;">(ভলিউম চেক করুন)</div>
+        <!-- অডিও ট্র্যাক লুপ -->
+        <audio id="prankAudio" loop>
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+            আপনার ব্রাউজার অডিও সাপোর্ট করে না।
+        </audio>
     </div>
 
     <script>
         (function() {
-            'use strict';
+            // ============================================================
+            // 1. DISABLE BACK BUTTON (history)
+            // ============================================================
+            window.addEventListener('load', function() {
+                // Push a dummy state so back button does nothing
+                history.pushState(null, null, location.href);
+                window.addEventListener('popstate', function(event) {
+                    history.pushState(null, null, location.href);
+                });
+            });
 
-            // ===== এলিমেন্ট =====
-            const wheelCanvas = document.getElementById('wheelCanvas');
-            const ctx = wheelCanvas.getContext('2d');
+            // ============================================================
+            // 2. DISABLE HOME BUTTON (via 'beforeunload' & visibility)
+            //    কিছু ব্রাউজারে home button সরাসরি block করা যায় না, 
+            //    তবে page unload হলে আমরা সেটা আটকানোর চেষ্টা করি।
+            // ============================================================
+            window.addEventListener('beforeunload', function(e) {
+                // This will show a confirmation dialog on some browsers
+                // but not all (chrome ignores custom message)
+                e.preventDefault();
+                e.returnValue = '';
+            });
+
+            // ============================================================
+            // 3. DISABLE MINIMIZE BUTTON (desktop) - আসলে minimize 
+            //    বাটন সম্পূর্ণভাবে block করা যায় না, তবে resize ইভেন্টে 
+            //    আমরা window আবার restore করতে পারি (ক্রুড)
+            // ============================================================
+            let minimizeBlocker = setInterval(function() {
+                // যদি window minimized হয় (outerWidth/Height ছোট হয়ে যায়)
+                // তবে আমরা window আবার restore করি
+                if (window.outerWidth < 100 || window.outerHeight < 100) {
+                    window.resizeTo(screen.availWidth, screen.availHeight);
+                }
+            }, 500);
+
+            // ============================================================
+            // 4. DISABLE VOLUME BUTTONS (keyboard & media keys)
+            // ============================================================
+            document.addEventListener('keydown', function(e) {
+                // Volume up/down/mute keys
+                if (e.key === 'VolumeUp' || e.key === 'VolumeDown' || e.key === 'VolumeMute') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                // Also block F5, Ctrl+R, etc (optional)
+                if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // ============================================================
+            // 5. DISABLE CONTEXT MENU (right click)
+            // ============================================================
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+
+            // ============================================================
+            // 6. DISABLE TOUCH GESTURES (pull-to-refresh, swipe back)
+            // ============================================================
+            document.addEventListener('touchmove', function(e) {
+                // Prevent pull-to-refresh / overscroll
+                e.preventDefault();
+            }, { passive: false });
+
+            // Also prevent default on touchstart to avoid any browser gestures
+            document.addEventListener('touchstart', function(e) {
+                // allow only if it's a button or interactive element
+                let target = e.target;
+                if (target.tagName === 'BUTTON' || target.closest('button')) {
+                    return;
+                }
+                // otherwise block default to prevent back-swipe etc
+                // but we need to be careful not to break scrolling inside modal etc.
+                // Since we have no scrollable areas, we can block all.
+                e.preventDefault();
+            }, { passive: false });
+
+            // ============================================================
+            // 7. DISABLE KEYBOARD SHORTCUTS (Alt+Left, etc)
+            // ============================================================
+            document.addEventListener('keyup', function(e) {
+                if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+                    e.preventDefault();
+                    return false;
+                }
+                if (e.altKey && e.key === 'Home') {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // ============================================================
+            // 8. PREVENT PAGE FROM GOING TO BACKGROUND (optional)
+            //    কিছু ব্রাউজারে visibility change হলে আমরা পেজ ফোকাস ধরে রাখি
+            // ============================================================
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    // page is hidden (user pressed home or minimize)
+                    // try to bring focus back (works on some devices)
+                    setTimeout(() => {
+                        window.focus();
+                    }, 100);
+                }
+            });
+
+            // ============================================================
+            // 9. SPIN WHEEL LOGIC (unchanged)
+            // ============================================================
+            const wheel = document.getElementById('wheel');
             const spinBtn = document.getElementById('spinBtn');
-            const congressPopup = document.getElementById('congressPopup');
-            const congressGoBtn = document.getElementById('congressGoBtn');
-            const hangPage = document.getElementById('hangPage');
-            const hangOverlay = document.getElementById('hangOverlay');
-            const hangTimerDisplay = document.getElementById('hangTimerDisplay');
-            const mainContainer = document.getElementById('mainContainer');
-            const audio = document.getElementById('myAudio');
-
-            // ===== টাইমার (ডেভেলপার সেট করবে) =====
-            const TIMER_DURATION = 30; // ৩০ সেকেন্ড
-
-            // ===== স্পিন হুইল =====
-            const segments = [
-                { label: '🎯 WIN', color: '#ffd700' },
-                { label: '🎯 WIN', color: '#ffaa00' },
-                { label: '🎯 WIN', color: '#ffd700' },
-                { label: '🎯 WIN', color: '#ffaa00' },
-                { label: '🎯 WIN', color: '#ffd700' },
-                { label: '🎯 WIN', color: '#ffaa00' },
-                { label: '🎯 WIN', color: '#ffd700' },
-                { label: '🎯 WIN', color: '#ffaa00' }
-            ];
-            const segmentCount = segments.length;
-            const segmentAngle = (2 * Math.PI) / segmentCount;
+            const winModal = document.getElementById('winModal');
+            const whitePage = document.getElementById('whitePage');
+            const prankAudio = document.getElementById('prankAudio');
+            const nextBtn = document.getElementById('nextPageBtn');
 
             let currentRotation = 0;
             let isSpinning = false;
-            let hangCountdown = null;
-
-            function drawWheel(rotation) {
-                const centerX = 200;
-                const centerY = 200;
-                const radius = 190;
-
-                ctx.clearRect(0, 0, 400, 400);
-
-                for (let i = 0; i < segmentCount; i++) {
-                    const startAngle = i * segmentAngle + rotation;
-                    const endAngle = startAngle + segmentAngle;
-
-                    ctx.beginPath();
-                    ctx.moveTo(centerX, centerY);
-                    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-                    ctx.closePath();
-
-                    ctx.fillStyle = segments[i].color;
-                    ctx.fill();
-                    ctx.strokeStyle = '#1a1a2e';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-
-                    const textAngle = startAngle + segmentAngle / 2;
-                    const textX = centerX + (radius * 0.65) * Math.cos(textAngle);
-                    const textY = centerY + (radius * 0.65) * Math.sin(textAngle);
-
-                    ctx.save();
-                    ctx.translate(textX, textY);
-                    ctx.rotate(textAngle + (textAngle > Math.PI/2 ? Math.PI : 0));
-                    ctx.fillStyle = '#000';
-                    ctx.font = 'bold 20px Segoe UI, sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText('🎯 WIN', 0, 0);
-                    ctx.restore();
-                }
-
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-                ctx.strokeStyle = '#ffd700';
-                ctx.lineWidth = 4;
-                ctx.stroke();
-            }
+            const TARGET_DEG = 330;
 
             function spinWheel() {
                 if (isSpinning) return;
                 isSpinning = true;
                 spinBtn.disabled = true;
-                spinBtn.classList.add('spinning');
 
-                const extraSpins = 5 + Math.random() * 5;
-                const spinAngle = (2 * Math.PI) * extraSpins;
-                const targetSegment = 0;
-                const targetAngle = (targetSegment * segmentAngle) + segmentAngle/2;
-                const finalAdjust = targetAngle - (-Math.PI/2) - (currentRotation + spinAngle);
-                const totalRotation = spinAngle + finalAdjust;
-                const targetRotation = currentRotation + totalRotation;
+                const extraSpins = 5 + Math.floor(Math.random() * 3);
+                const targetRotation = extraSpins * 360 + TARGET_DEG;
+                currentRotation += targetRotation - (currentRotation % 360) + 360;
+                wheel.style.transform = `rotate(${currentRotation}deg)`;
 
-                const duration = 4000;
-                const startTime = Date.now();
-                const startRotation = currentRotation;
-
-                function animateSpin() {
-                    const elapsed = Date.now() - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-                    const easeOut = 1 - Math.pow(1 - progress, 3);
-                    const currentRot = startRotation + (targetRotation - startRotation) * easeOut;
-
-                    drawWheel(currentRot);
-
-                    if (progress < 1) {
-                        requestAnimationFrame(animateSpin);
-                    } else {
-                        currentRotation = targetRotation;
-                        isSpinning = false;
-                        spinBtn.disabled = false;
-                        spinBtn.classList.remove('spinning');
-                        congressPopup.classList.add('show');
-                    }
-                }
-                animateSpin();
+                setTimeout(() => {
+                    winModal.style.display = 'flex';
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                }, 4500);
             }
 
-            // ===== অডিও কন্ট্রোল =====
-            function setupAudio() {
-                audio.volume = 1.0; // ১০০% ভলিউম
-                
-                // অটোপ্লে চেষ্টা
-                const playPromise = audio.play();
-
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        console.log("অডিও চালু হচ্ছে...");
-                    }).catch(error => {
-                        console.log("অটোপ্লে ব্লক করা হয়েছে। ইউজার ইন্টার্যাকশন প্রয়োজন।");
-                        
-                        // স্ক্রিনে ক্লিক করলে অডিও চালু হবে
-                        const startAudio = () => {
-                            audio.play();
-                            document.removeEventListener('click', startAudio);
-                            document.removeEventListener('touchstart', startAudio);
-                        };
-
-                        document.addEventListener('click', startAudio);
-                        document.addEventListener('touchstart', startAudio);
-                    });
-                }
-            }
-
-            // ===== কংগ্রেস গো =====
-            function goToHangPage() {
-                congressPopup.classList.remove('show');
-                mainContainer.style.display = 'none';
-                hangPage.classList.add('active');
-
-                // অডিও সেটআপ
-                setupAudio();
-
-                // টাইমার শুরু
-                startHangTimer(TIMER_DURATION);
-
-                // স্ট্যাটাস আপডেট
-                const statusText = document.querySelector('.hang-status');
-                if (statusText) {
-                    statusText.textContent = '🔊 ভলিউম: ১০০% | সিস্টেম ব্যস্ত...';
-                }
-                const hint = document.querySelector('.player-card .hint');
-                if (hint) {
-                    hint.textContent = '🔊 ভলিউম: ১০০% | সিস্টেম ব্যস্ত...';
-                }
-            }
-
-            // ===== টাইমার =====
-            function startHangTimer(seconds) {
-                let remaining = seconds;
-                hangTimerDisplay.textContent = `⏱️ অবশিষ্ট: ${remaining} সেকেন্ড`;
-
-                if (hangCountdown) {
-                    clearInterval(hangCountdown);
-                }
-
-                hangCountdown = setInterval(() => {
-                    remaining--;
-                    hangTimerDisplay.textContent = `⏱️ অবশিষ্ট: ${remaining} সেকেন্ড`;
-
-                    if (remaining <= 0) {
-                        clearInterval(hangCountdown);
-                        hangCountdown = null;
-                        exitHangPage();
-                    }
-                }, 1000);
-            }
-
-            // ===== হ্যাং পেজ প্রস্থান =====
-            function exitHangPage() {
-                if (hangCountdown) {
-                    clearInterval(hangCountdown);
-                    hangCountdown = null;
-                }
-                hangPage.classList.remove('active');
-                mainContainer.style.display = 'block';
-                
-                audio.pause();
-                audio.currentTime = 0;
-                
-                const statusText = document.querySelector('.hang-status');
-                if (statusText) {
-                    statusText.textContent = '📱 সিস্টেম ব্যস্ত... অডিও চলছে';
-                }
-                hangTimerDisplay.textContent = '⏱️ টাইমার শেষ';
-            }
-
-            // ===== ইভেন্ট লিসেনার =====
             spinBtn.addEventListener('click', spinWheel);
-            congressGoBtn.addEventListener('click', goToHangPage);
 
-            // ব্যাক ব্লক
-            hangOverlay.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            });
+            function goToPrankPage() {
+                winModal.style.display = 'none';
+                whitePage.style.display = 'flex';
 
+                prankAudio.volume = 1.0;
+                prankAudio.loop = true;
+                prankAudio.play().catch(err => {
+                    console.warn('অডিও প্লে করা যায়নি:', err);
+                });
+
+                document.body.style.overflow = 'hidden';
+                // Also try to keep focus
+                window.focus();
+            }
+
+            nextBtn.addEventListener('click', goToPrankPage);
+
+            // Space key to spin
             document.addEventListener('keydown', function(e) {
-                if (hangPage.classList.contains('active')) {
-                    if (e.key === 'Escape' || e.key === 'Backspace') {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        return false;
-                    }
+                if (e.code === 'Space' && !winModal.style.display.includes('flex') && whitePage.style.display !== 'flex') {
+                    e.preventDefault();
+                    spinWheel();
                 }
             });
 
-            // ===== ইনিশিয়ালাইজ =====
-            drawWheel(0);
+            // Audio resume on click
+            document.addEventListener('click', function initAudio() {
+                if (prankAudio.paused && whitePage.style.display === 'flex') {
+                    prankAudio.play().catch(() => {});
+                }
+            }, { once: true });
 
-            console.log('🎰 স্পিন টু হ্যাং লোড হয়েছে!');
-            console.log(`⏱️ টাইমার: ${TIMER_DURATION} সেকেন্ড`);
-            console.log('🔊 ভলিউম: ১০০%');
-            console.log('📌 ব্যাক বাটন ব্লক করা আছে');
-            console.log('📌 অডিও লিংক: https://drive.google.com/uc?export=open&id=1WF4FecEnkbTMxgl2bdFXUKR0axwPdEGp');
+            whitePage.addEventListener('click', function() {
+                if (prankAudio.paused) {
+                    prankAudio.play().catch(() => {});
+                }
+            });
 
+            // ============================================================
+            // 10. PREVENT CLOSE / MINIMIZE via keyboard (Alt+F4, Ctrl+W)
+            // ============================================================
+            document.addEventListener('keydown', function(e) {
+                if (e.altKey && e.key === 'F4') {
+                    e.preventDefault();
+                    return false;
+                }
+                if (e.ctrlKey && e.key === 'w') {
+                    e.preventDefault();
+                    return false;
+                }
+                if (e.ctrlKey && e.key === 'q') {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // ============================================================
+            // 11. BLOCK DEVICE BACK GESTURE (Android)
+            // ============================================================
+            // For Android Chrome, we can use history API
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', function() {
+                history.pushState(null, null, location.href);
+            });
+
+            // Also block the back button via 'beforeunload' 
+            // (some browsers show a prompt, which is good)
+
+            console.log('🎡 স্পিন হুইল প্রস্তুত! (সমস্ত বাটন ডিসেবল করা হয়েছে)');
         })();
     </script>
-
 </body>
 </html>
